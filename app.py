@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, session
 import os
+import base64
 from flask_bcrypt import Bcrypt #pip install Flask-Bcrypt = https://pypi.org/project/Flask-Bcrypt/
 from datetime import datetime, timedelta, timezone
 from flask_cors import CORS, cross_origin #ModuleNotFoundError: No module named 'flask_cors' = pip install Flask-Cors
@@ -17,8 +18,10 @@ bucket = storage_client.bucket(bucket_name)
 default_logo_name = "farmers2u_logo.png"
 default_logo = f"https://storage.googleapis.com/{bucket_name}/{default_logo_name}" """
 
-service_account_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-storage_client = storage.Client.from_service_account_json(service_account_json)
+
+base64_encoded_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON_B64")
+decoded_json = base64.b64decode(base64_encoded_json).decode("utf-8")
+storage_client = storage.Client.from_service_account_json(decoded_json)
 bucket_name = 'image_storage_farmers2u'
 bucket = storage_client.bucket(bucket_name)
 default_logo_name = "farmers2u_logo.png"
@@ -85,7 +88,7 @@ def delete_object_by_url(url):
     object_name = url.split('/')[-1]
 
     # Initialize Google Cloud Storage client
-    client = storage.Client.from_service_account_json(service_account_json)
+    client = storage.Client.from_service_account_json(decoded_json)
     
 
     # Specify the bucket name
