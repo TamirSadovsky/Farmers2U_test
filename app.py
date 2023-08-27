@@ -31,7 +31,7 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 jwt = JWTManager(app)
 
 app.config['SECRET_KEY'] = 'farmers2u'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///flaskdb.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://uwzxsyhsydpgms:0192463d51b1cd4384bb291794b9cee8fb0aea8974dd00fc811b598c867e2f81@ec2-34-236-103-63.compute-1.amazonaws.com:5432/d1h5fpboqosunf'
  
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_ECHO = True
