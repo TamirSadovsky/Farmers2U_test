@@ -21,7 +21,8 @@ default_logo = f"https://storage.googleapis.com/{bucket_name}/{default_logo_name
 
 base64_encoded_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON_B64")
 decoded_json = base64.b64decode(base64_encoded_json).decode("utf-8")
-storage_client = storage.Client.from_service_account_json(decoded_json)
+credentials_info = json.loads(decoded_json)
+storage_client = storage.Client.from_service_account_json(credentials_info)
 bucket_name = 'image_storage_farmers2u'
 bucket = storage_client.bucket(bucket_name)
 default_logo_name = "farmers2u_logo.png"
