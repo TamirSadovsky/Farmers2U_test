@@ -7,7 +7,9 @@ from werkzeug.utils import secure_filename
 from geopy.geocoders import Nominatim
 import urllib.parse
 from google.cloud import storage
-
+from dotenv import load_dotenv, find_dotenv
+import base64
+import json
 
 
 
@@ -34,12 +36,18 @@ def generate_unique_filename(filename):
 
 
 posts_blueprint = Blueprint('posts', __name__)
+load_dotenv()
 
-from app import service_account_json
+# Retrieve the JSON string from the environment variable
+google_credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
 
-storage_client = storage.Client.from_service_account_json(service_account_json)
+# Parse the JSON string into a dictionary
+google_credentials_dict = json.loads(google_credentials_json)
 
+# Create a storage client using the parsed service account info
+storage_client = storage.Client.from_service_account_info(google_credentials_dict)
 
+#storage_client = storage.Client.from_service_account_json('C:\\Users\\tamir\\OneDrive\\Desktop\\GoogleWorkshop\\frontend\\keyfile.json')
 bucket_name = 'image_storage_farmers2u'
 bucket = storage_client.bucket(bucket_name)
 
