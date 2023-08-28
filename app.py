@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify, session
 import os
-import base64
 from flask_bcrypt import Bcrypt #pip install Flask-Bcrypt = https://pypi.org/project/Flask-Bcrypt/
 from datetime import datetime, timedelta, timezone
 from flask_cors import CORS, cross_origin #ModuleNotFoundError: No module named 'flask_cors' = pip install Flask-Cors
@@ -10,21 +9,29 @@ from werkzeug.utils import secure_filename #pip install Werkzeug
 import json
 from google.cloud import storage
 
-# from flask_migrate import Migratec:\\Users\\IMOE001\\Desktop\\farmers2u_back GOOGLE_APPLICATION_CREDENTIALS_JSON
 
-"""storage_client = storage.Client.from_service_account_json('c:\\Users\\IMOE001\\Desktop\\farmers2u_back\\keyfile.json')
+
+firebase_credentials = {
+  "type": "service_account",
+  "project_id": "farmers2u-396909",
+  "private_key_id": "085b1079767c7e424d3d6367201acafcff765e25",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCj7rza30Db29n8\nVtWInVwtERP843w3nfCJUEnGb9zCW3LWS4X46JBEH9Lmy9OklzV59lb8VoibknQl\nUOxiTgtZ/7c5t6trRWCCjC8BD0mBDGoMx1Ti0ICLAqwHgWtDexSPlaD8I6X883wb\nIVXvJwhJ2Oh/o5E5v6lvgxIAEwWnlOdymNpToFEa6vToIuUfTgNjudpPEDR4kr9b\nuk50t9hxjFE/3Yi1+nQ8+i1A+2/3QcsbxC4FjKtHy0bwnUsx5YaHSTaYTxOi+dxs\nQmMmoQj4dSPign5p8Kv56FYJq1YDw2DVsnBuox+c9cn3z3Ly5nMhlzA7qdfZ+Aj+\n5iFrke0XAgMBAAECggEAMwqy/70Sj0IpYcHRs7s3R4rxO8TC2PhSvBZlGiWbSWK6\n41FZkfIrdSKpgpYFPFKeYm6aj/ALkdDsW/AR4dvl+ew+aviupXRRA+TM/9n4K3en\nj3oDCqob0+yNjrqzoKuyb7CJkugwlw1i33mmLZPsJz4jyhYuMhpkkaVwVdiWYqJh\nSUkEPSbd6xC3mDsFQ0xMnTvZxQpOSp45pNYF+Z9fixdI0l1G1NII3mNQXvi5OMRA\npDn6USpgaDe3oSzpouF8TRhTpvaw43Xd1PQDBsvq1BQ9OIzNPQLLRiKZl6tVUrNe\ngcMNODxCPxRhzjAnF+qLCzZuRw9s7ouwxATqQt3FaQKBgQDORNztJE7hjVmfE8KB\nG6FfrXI0bfMEVsmEG5ZCi4YRfPJMy4pc/eonqHpqy4IBijmfAvDXmz6307oGjm+n\n7L3CEXbJLjnh5Iey65kXAY3p/BtehPwQOIpuEj68/Qph/KsXJL0ZXVrrfXx8Yojf\n9zpMr1mRa+JmMFCcIjwyfPOvSQKBgQDLdNOP6x/+FbexCXsTSRN4jfvVqsPvJx4k\nr7tuSr603Xg6EPmJOG0Qw3FKjoBvh7EU40d9pMb77tzObs4PqsLMQAS2pvTI1d2O\nLWRAtj2v0z55YqS5e0/E3ZI0Ipc+NasLSzs4M56mSLQWSymwyM3xPkbpGC8FWBMQ\nGmlBzhfZXwKBgQCZCZ6gk3+y+Ry1WgPFpqpkQlupaqoTXhDFY3JojPw7nWhocduG\ngx1nryikc7lRSyzVPWlTjmtKGFy84JEXFh70DeEEArgPUW8c4JAE8bJJGDN2PVSG\n9GxAnmjN7y/043JNCYUDfLAoaEIkRzcmdFdc7fyWWGTxTIeCUCQ5kVt7gQKBgD6N\nM4I64sImgSxP4uQCApd856FAeC7t0umqkbCOEGXg9Va840tZ6sZNoGYwu7IOgNYQ\nLmmloHvSa1aYYIgWkv9i61AQso+QmSZeNEVlAkAtbTa6qjRQgizfhlS7Ec7Rhz3Y\nqmNUE4HCNoPoJfAxPIfgAsMlaUd2VZ4M0LGnoFN3AoGBAKtObvjNr7pnqzICYaZf\n1/rKcdn6e7Ng0LAnDtQE3e10lDDo3oBLYOjP4Mn1Nm/JnnV4Wnus3uWan/HIe+j/\nqKX8ZDRDBKjsMtzPlZDZ2rqzlSFYsrAJnis2ZXuf8RImGoZKbuXc6gHnz1b/elVY\nIf6rLitSFeD+pju/rs2Sy0dI\n-----END PRIVATE KEY-----\n",
+  "client_email": "farmers2u-cloud@farmers2u-396909.iam.gserviceaccount.com",
+  "client_id": "103429868284965213206",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/farmers2u-cloud%40farmers2u-396909.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+    }
+with open("firebase_credentials.json", "w") as write_file:
+    json.dump(firebase_credentials, write_file)
+service_account_json = os.environ.get("firebase_credentials.json")
+storage_client = storage.Client.from_service_account_json(service_account_json)
+
 bucket_name = 'image_storage_farmers2u'
 bucket = storage_client.bucket(bucket_name)
-default_logo_name = "farmers2u_logo.png"
-default_logo = f"https://storage.googleapis.com/{bucket_name}/{default_logo_name}" """
 
-
-base64_encoded_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON_B64")
-decoded_json = base64.b64decode(base64_encoded_json).decode("utf-8")
-credentials_info = json.loads(decoded_json)
-storage_client = storage.Client.from_service_account_json(credentials_info)
-bucket_name = 'image_storage_farmers2u'
-bucket = storage_client.bucket(bucket_name)
 default_logo_name = "farmers2u_logo.png"
 default_logo = f"https://storage.googleapis.com/{bucket_name}/{default_logo_name}"
 
@@ -89,7 +96,7 @@ def delete_object_by_url(url):
     object_name = url.split('/')[-1]
 
     # Initialize Google Cloud Storage client
-    client = storage.Client.from_service_account_json(decoded_json)
+    client = storage.Client.from_service_account_json(service_account_json)
     
 
     # Specify the bucket name
