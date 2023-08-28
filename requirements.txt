@@ -82,8 +82,10 @@ Pygments==2.14.0
 PyJWT==2.7.0
 pyparsing==3.0.9
 python-dateutil==2.8.2
+python-dotenv==1.0.0
 pytz==2022.7
 PyWavelets==1.4.1
+pywin32==306
 pyzmq==25.0.1
 requests==2.28.2
 rgb==0.0.3
