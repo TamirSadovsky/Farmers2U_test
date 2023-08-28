@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify, session
 import os
-from dotenv import load_dotenv
 from flask_bcrypt import Bcrypt #pip install Flask-Bcrypt = https://pypi.org/project/Flask-Bcrypt/
 from datetime import datetime, timedelta, timezone
 from flask_cors import CORS, cross_origin #ModuleNotFoundError: No module named 'flask_cors' = pip install Flask-Cors
@@ -9,17 +8,27 @@ from models import db, User, Post
 from werkzeug.utils import secure_filename #pip install Werkzeug
 import json
 from google.cloud import storage
+from dotenv import load_dotenv, find_dotenv
+import base64
 
 
-
-
+# Load environment variables from .env
 load_dotenv()
-service_account_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-storage_client = storage.Client.from_service_account_json(service_account_json)
+
+# Retrieve the JSON string from the environment variable
+google_credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+
+# Parse the JSON string into a dictionary
+google_credentials_dict = json.loads(google_credentials_json)
+
+# Create a storage client using the parsed service account info
+storage_client = storage.Client.from_service_account_info(google_credentials_dict)
+
+# Now you can use the storage_client to interact with Google Cloud Storage
+
 
 bucket_name = 'image_storage_farmers2u'
 bucket = storage_client.bucket(bucket_name)
-
 default_logo_name = "farmers2u_logo.png"
 default_logo = f"https://storage.googleapis.com/{bucket_name}/{default_logo_name}"
 
@@ -30,7 +39,7 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 jwt = JWTManager(app)
 
 app.config['SECRET_KEY'] = 'farmers2u'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://uwzxsyhsydpgms:0192463d51b1cd4384bb291794b9cee8fb0aea8974dd00fc811b598c867e2f81@ec2-34-236-103-63.compute-1.amazonaws.com:5432/d1h5fpboqosunf'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///flaskdb.db'
  
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_ECHO = True
@@ -70,6 +79,9 @@ app.register_blueprint(business_blueprint)
 from farmFilt import farmfilter_blueprint
 app.register_blueprint(farmfilter_blueprint)
 
+UPLOAD_FOLDER = os.path.join('..', 'frontend', 'public', 'Form_images','Logo_image')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
   
@@ -84,8 +96,7 @@ def delete_object_by_url(url):
     object_name = url.split('/')[-1]
 
     # Initialize Google Cloud Storage client
-    client = storage.Client.from_service_account_json(decoded_json)
-    
+    client = storage.Client.from_service_account_info(google_credentials_dict)
 
     # Specify the bucket name
     bucket_name = 'image_storage_farmers2u'
@@ -124,22 +135,11 @@ def create_token():
     #password = request.json.get("password", None)
 
     user = User.query.filter_by(email=email).first()
-
-    # if email != "test" or password != "test":
-    #    return {"msg": "Wrong rmail or password"}, 401
-    
-    # if user is None:
-    #    return jsonify({"error": "Wrong email or password"}), 401
     
     if user is None:
         return jsonify({"error": "Wrong Email"}), 401
-    
-    #if not bcrypt.check_password_hash(user.password, password):
-    #    return jsonify({"error": "Unauthorized"}), 401
 
     access_token = create_access_token(identity=email)
-    #response = {"access_token": access_token}
-    #return response
 
     return jsonify({
         "email": email,
@@ -147,7 +147,53 @@ def create_token():
         "profilePicture": user.logo_picture,
         "access_token": access_token
     })
-
+ 
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    # check if the post request has the file part
+    print(request.files)
+    if 'files[]' not in request.files:
+        resp = jsonify({
+            "message": 'No file part in the request',
+            "status": 'failed'
+        })
+        resp.status_code = 400
+        return resp
+  
+    files = request.files.getlist('files[]')
+      
+    errors = {}
+    success = False
+      
+    for file in files:      
+        if file and allowed_file(file.filename):
+            #filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+            success = True
+        else:
+            resp = jsonify({
+                "message": 'File type is not allowed',
+                "status": 'failed'
+            })
+            return resp
+         
+    if success and errors:
+        errors['message'] = 'File(s) successfully uploaded'
+        errors['status'] = 'failed'
+        resp = jsonify(errors)
+        resp.status_code = 500
+        return resp
+    if success:
+        resp = jsonify({
+            "message": 'Files successfully uploaded',
+            "status": 'successs'
+        })
+        resp.status_code = 201
+        return resp
+    else:
+        resp = jsonify(errors)
+        resp.status_code = 500
+        return resp
 
 @app.route("/signup", methods=["POST"])
 def signup():
