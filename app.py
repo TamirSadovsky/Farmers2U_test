@@ -20,9 +20,6 @@ google_credentials_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
 google_credentials_dict = json.loads(google_credentials_json)
 # Create a storage client using the parsed service account info
 storage_client = storage.Client.from_service_account_info(google_credentials_dict)
-print("Hello")
-# Now you can use the storage_client to interact with Google Cloud Storage
-
 
 bucket_name = 'image_storage_farmers2u'
 bucket = storage_client.bucket(bucket_name)
@@ -32,7 +29,7 @@ default_logo = f"https://storage.googleapis.com/{bucket_name}/{default_logo_name
 
 app = Flask(__name__)
 
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+#app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 jwt = JWTManager(app)
 
 app.config['SECRET_KEY'] = 'farmers2u'
